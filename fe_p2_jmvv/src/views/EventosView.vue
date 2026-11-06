@@ -19,9 +19,11 @@ const emptyForm = (): EventoCultural => ({
   precio_entrada: 0,
   fecha_evento: '',
   estado: 'Programado',
+  modalidad_ingreso: 'Entrada Pagada',
 })
 
 const form = ref<EventoCultural>(emptyForm())
+const busqueda = ref('')
 
 const programados = computed(
   () => eventos.value.filter((evento) => evento.estado === 'Programado').length,
@@ -29,6 +31,14 @@ const programados = computed(
 const agotados = computed(
   () => eventos.value.filter((evento) => evento.estado === 'Agotado').length,
 )
+const eventosFiltrados = computed(() => {
+  const termino = busqueda.value.toLocaleLowerCase('es')
+  return eventos.value.filter(
+    (evento) =>
+      (evento.titulo || '').toLocaleLowerCase('es').includes(termino) ||
+      (evento.artista_principal || '').toLocaleLowerCase('es').includes(termino),
+  )
+})
 
 const loadData = async () => {
   isLoading.value = true
@@ -133,25 +143,22 @@ onMounted(loadData)
   <main class="events-page">
     <header class="page-header">
       <div>
-        <p class="eyebrow">AGENDA Y BOLETERÍA</p>
+        <p class="eyebrow">Agenda y boleteria</p>
         <h1>Eventos culturales</h1>
-        <p class="page-description">Organiza la programación y administra tus eventos.</p>
-      </div>
-      <div class="header-icon" aria-hidden="true">
-        <i class="bi bi-calendar2-event"></i>
+        <p class="page-description">Organiza la programacion y administra eventos</p>
       </div>
     </header>
 
     <section class="summary-grid" aria-label="Resumen de eventos">
       <article class="summary-card">
-        <span class="summary-icon total-icon"><i class="bi bi-ticket-perforated"></i></span>
+        <span class="summary-icon total-icon"><i class="bi bi-calendar2-event-fill"></i></span>
         <div>
           <p>Total de eventos</p>
           <strong>{{ eventos.length }}</strong>
         </div>
       </article>
       <article class="summary-card">
-        <span class="summary-icon scheduled-icon"><i class="bi bi-calendar-check"></i></span>
+        <span class="summary-icon scheduled-icon"><i class="bi bi-android"></i></span>
         <div>
           <p>Programados</p>
           <strong>{{ programados }}</strong>
@@ -222,7 +229,7 @@ onMounted(loadData)
           <span>Duración</span>
           <div class="input-suffix">
             <input v-model.number="form.duracion_minutos" type="number" min="1" placeholder="90" required />
-            <span>min</span>
+            <span>minimo 1</span>
           </div>
         </label>
 
@@ -255,8 +262,17 @@ onMounted(loadData)
           </select>
         </label>
 
+        <label class="field">
+          <span>Modalidad de ingreso</span>
+          <select v-model="form.modalidad_ingreso" required>
+            <option value="Entrada Pagada">Entrada Pagada</option>
+            <option value="Entrada Gratuita">Entrada Gratuita</option>
+            <option value="Pase Invitacion">Pase Invitacion</option>
+          </select>
+        </label>
+
         <div class="form-actions">
-          <button class="submit-button" type="submit" :disabled="isSaving || !recintos.length">
+          <button class="submit-button" type="submit" :disabled="isSaving || !recintos.length" style='color: #fff; background-color: #007bff; border-color: #007bff;'>
             <i :class="isSaving ? 'bi bi-hourglass-split' : 'bi bi-plus-lg'"></i>
             {{ isSaving ? 'Guardando...' : 'Crear evento' }}
           </button>
@@ -281,6 +297,11 @@ onMounted(loadData)
         <span>{{ errorMessage }}</span>
       </div>
 
+      <label>
+        Buscar por evento o artista
+        <input v-model.trim="busqueda" type="search" placeholder="Escribe para buscar" style="width: 100%; background-color: #f8f9fa;">
+      </label>
+
       <div v-if="isLoading" class="empty-state">
         <i class="bi bi-arrow-repeat spinning"></i>
         <p>Cargando eventos...</p>
@@ -292,6 +313,12 @@ onMounted(loadData)
         <p>Completa el formulario para agregar el primer evento a la agenda.</p>
       </div>
 
+      <div v-else-if="!eventosFiltrados.length" class="empty-state">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <h3>No se encontraron eventos</h3>
+        <p>Prueba con otro nombre de evento o artista.</p>
+      </div>
+
       <div v-else class="table-wrap">
         <table class="events-table">
           <thead>
@@ -300,12 +327,13 @@ onMounted(loadData)
               <th>Recinto</th>
               <th>Fecha</th>
               <th>Entrada</th>
+              <th>Modalidad</th>
               <th>Estado</th>
               <th><span class="sr-only">Acciones</span></th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="evento in eventos" :key="evento.id">
+            <tr v-for="evento in eventosFiltrados" :key="evento.id">
               <td>
                 <strong class="event-title">{{ evento.titulo || 'Evento sin título' }}</strong>
                 <span class="event-artist">{{ evento.artista_principal || 'Artista no especificado' }}</span>
@@ -315,6 +343,7 @@ onMounted(loadData)
               </td>
               <td>{{ formatDate(evento.fecha_evento) }}</td>
               <td>{{ formatPrice(evento.precio_entrada) }}</td>
+              <td>{{ evento.modalidad_ingreso }}</td>
               <td>
                 <span class="status-badge" :class="`status-${evento.estado.toLowerCase()}`">
                   <span class="status-dot"></span>
@@ -343,11 +372,6 @@ onMounted(loadData)
 
 <style scoped>
 .events-page {
-  --ink: #17233c;
-  --muted: #748097;
-  --line: #e8ebf1;
-  --accent: #6d4aff;
-  --accent-dark: #5434df;
   width: min(1120px, 100%);
   margin: 0 auto;
   padding: 38px 28px 64px;
@@ -440,18 +464,16 @@ h1 {
 }
 
 .total-icon {
-  color: #6042ed;
-  background: #f0edff;
+  color: #00ff15;
+
 }
 
 .scheduled-icon {
   color: #15875a;
-  background: #e7f7ef;
 }
 
 .sold-icon {
   color: #c17a12;
-  background: #fff5dd;
 }
 
 .summary-card p {
@@ -680,7 +702,6 @@ h1 {
   font-size: 0.69rem;
   font-weight: 750;
   letter-spacing: 0.07em;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -728,26 +749,17 @@ h1 {
   font-weight: 650;
 }
 
-.status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: currentColor;
-}
 
 .status-programado {
-  background: #e9f7ef;
-  color: #188452;
+  color: #00502b;
 }
 
 .status-agotado {
-  background: #fff5df;
-  color: #a66b0d;
+  color: #7d4d00;
 }
 
 .status-cancelado {
-  background: #fff0ef;
-  color: #bd4d46;
+  color: #c20d00;
 }
 
 .action-cell {
@@ -756,7 +768,7 @@ h1 {
 
 .delete-button {
   padding: 7px 9px;
-  background: #fff3f2;
+  background: #ffffff;
   color: #b64a43;
   font-size: 0.76rem;
 }

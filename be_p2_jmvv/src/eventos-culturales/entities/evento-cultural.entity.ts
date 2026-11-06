@@ -16,6 +16,13 @@ export enum EstadoEvento {
   CANCELADO = 'Cancelado',
 }
 
+export enum ModalidadIngreso {
+  ENTRADA_PAGADA = 'Entrada Pagada',
+  ENTRADA_GRATUITA = 'Entrada Gratuita',
+  PASE_INVITACION = 'Pase Invitacion',
+}
+
+
 @Entity('eventos_culturales')
 export class EventoCultural {
   @PrimaryGeneratedColumn()
@@ -45,6 +52,9 @@ export class EventoCultural {
 
   @Column({ type: 'enum', enum: EstadoEvento, nullable: false })
   estado: EstadoEvento;
+
+  @Column({ type: 'varchar', length: 50, nullable: false, default: 'Entrada Pagada' })
+  modalidad_ingreso: ModalidadIngreso;
 
   @CreateDateColumn({ name: 'fecha_creacion' })
   fechaCreacion: Date;

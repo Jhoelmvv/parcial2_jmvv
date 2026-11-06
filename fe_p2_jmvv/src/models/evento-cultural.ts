@@ -14,4 +14,5 @@ export interface EventoCultural {
   precio_entrada: number;
   fecha_evento: string;
   estado: 'Programado' | 'Agotado' | 'Cancelado';
+  modalidad_ingreso: 'Entrada Pagada' | 'Entrada Gratuita' | 'Pase Invitacion';
 }

@@ -1,7 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsDateString, IsDefined, IsEnum, IsInt, IsNotEmpty, IsNumber, IsString, MaxLength } from 'class-validator';
-import { EstadoEvento } from '../entities/evento-cultural.entity';
+import { 
+  IsDateString, 
+  IsDefined, 
+  IsEnum, 
+  IsInt, 
+  IsNotEmpty, 
+  IsNumber, 
+  IsString, 
+  MaxLength
+ } from 'class-validator';
+import { 
+  EstadoEvento, 
+  ModalidadIngreso 
+} from '../entities/evento-cultural.entity';
+
 
 export class CreateEventoCulturalDto {
   @ApiProperty()
@@ -22,6 +35,11 @@ export class CreateEventoCulturalDto {
   @MaxLength(100, { message: 'El artista principal no puede tener más de 100 caracteres' })
   @Transform(({ value }): string | undefined => (typeof value === 'string' ? value.trim() : value))
   readonly artista_principal: string;
+
+  @ApiProperty({ enum: ModalidadIngreso })
+  @IsDefined({ message: 'La modalidad de ingreso es obligatoria' })
+  @IsEnum(ModalidadIngreso, { message: 'Modalidad de ingreso inválida' })
+  readonly modalidad_ingreso: ModalidadIngreso;
 
   @ApiProperty()
   @IsDefined({ message: 'La duración es obligatoria' })
